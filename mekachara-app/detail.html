@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MACHINE PROFILE</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="firebase-config.js"></script>
+<script src="classData.js"></script>
+<script src="detail.js" defer></script>
+
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  color: #eaf6ff;
+  background:
+    linear-gradient(180deg, #0a0f16, #0e1520),
+    repeating-linear-gradient(
+      0deg,
+      rgba(120, 220, 255, 0.00) 0px,
+      rgba(120, 220, 255, 0.00) 27px,
+      rgba(120, 220, 255, 0.03) 28px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(120, 220, 255, 0.00) 0px,
+      rgba(120, 220, 255, 0.00) 27px,
+      rgba(120, 220, 255, 0.03) 28px
+    );
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #8adfff;
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border: 1px solid #35556d;
+  background: linear-gradient(180deg, #172230, #0d141e);
+  box-shadow:
+    inset 0 0 0 1px rgba(160, 230, 255, 0.05),
+    0 0 18px rgba(0, 180, 255, 0.08);
+  position: relative;
+}
+
+.header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 110px;
+  height: 2px;
+  background: #8adfff;
+  box-shadow: 0 0 10px rgba(138, 223, 255, 0.8);
+}
+
+.header-sub {
+  font-size: 10px;
+  color: #73cceb;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f3fbff;
+}
+
+.sheet {
+  border: 2px solid #35556d;
+  background: linear-gradient(180deg, rgba(18,26,36,0.98), rgba(10,16,24,0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(160, 230, 255, 0.05),
+    0 0 20px rgba(0, 180, 255, 0.08);
+  overflow: hidden;
+}
+
+.top-visual {
+  border-bottom: 2px solid #35556d;
+  background: linear-gradient(180deg, #121b27, #0b121b);
+  padding: 16px;
+}
+
+.visual-title {
+  font-size: 11px;
+  color: #76d2f2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.preview-frame {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid #35556d;
+  background: linear-gradient(180deg, #0f1823, #091018);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(160, 230, 255, 0.05),
+    0 0 18px rgba(0, 180, 255, 0.08);
+}
+
+.preview-frame::before {
+  content: "MAIN CAMERA";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 3;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: #8adfff;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2px 6px;
+}
+
+.preview-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.03), transparent 12%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.00) 0px,
+      rgba(255,255,255,0.00) 3px,
+      rgba(255,255,255,0.02) 4px
+    );
+  pointer-events: none;
+}
+
+.preview-frame > img:first-child {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preview-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6f93a8;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pilot {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border: 2px solid #8adfff;
+  background: #000;
+  z-index: 2;
+  box-shadow:
+    0 0 18px rgba(138,223,255,0.35),
+    inset 0 0 10px rgba(138,223,255,0.15);
+}
+
+.pilot-frame {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 168px;
+  height: 168px;
+  border: 1px solid rgba(138,223,255,0.5);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pilot-label {
+  position: absolute;
+  right: 16px;
+  bottom: 180px;
+  z-index: 2;
+  font-size: 10px;
+  color: #8adfff;
+  letter-spacing: 0.14em;
+  background: rgba(0,0,0,0.45);
+  padding: 2px 6px;
+  text-transform: uppercase;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 76px;
+  border-bottom: 2px solid #35556d;
+}
+
+.row.multi-3 {
+  grid-template-columns: 180px 1fr 120px 1fr 120px 1fr;
+}
+
+.row.multi-2 {
+  grid-template-columns: 180px 1fr 120px 1fr;
+}
+
+.label {
+  background: linear-gradient(180deg, #243241, #18222c);
+  color: #f3fbff;
+  font-weight: bold;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 2px solid #35556d;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 8px rgba(138, 223, 255, 0.18);
+  text-align: center;
+}
+
+.sub-label {
+  background: linear-gradient(180deg, #243241, #18222c);
+  color: #dff5ff;
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 2px solid #35556d;
+  border-right: 2px solid #35556d;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.cell {
+  background: linear-gradient(180deg, #0e1620, #0b1118);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.cell.stretch {
+  align-items: stretch;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #4b6c84;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #111b26, #0b131c);
+  color: #f2fbff;
+  font-size: 24px;
+  padding: 10px 14px;
+  font-family: inherit;
+  outline: none;
+  box-shadow:
+    inset 0 0 8px rgba(120, 220, 255, 0.06),
+    0 0 0 rgba(0,0,0,0);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #8adfff;
+  box-shadow:
+    0 0 0 1px rgba(138,223,255,0.35),
+    0 0 12px rgba(0,180,255,0.12),
+    inset 0 0 8px rgba(120,220,255,0.06);
+  background: linear-gradient(180deg, #13202c, #0d1721);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6f93a8;
+}
+
+textarea {
+  min-height: 190px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.small-input {
+  font-size: 20px;
+  text-align: center;
+}
+
+.number-box {
+  width: 100%;
+  height: 82px;
+  border: 1px solid #4b6c84;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #111b26, #0b131c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  color: #f2fbff;
+  box-shadow: inset 0 0 8px rgba(120,220,255,0.06);
+}
+
+.status-block {
+  border-top: 2px solid #35556d;
+}
+
+.status-header {
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #172230, #0d141e);
+  color: #8adfff;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-bottom: 2px solid #35556d;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 180px 120px repeat(6, 1fr);
+  border-bottom: 2px solid #35556d;
+}
+
+.status-grid.header-row {
+  background: linear-gradient(180deg, #243241, #18222c);
+}
+
+.status-grid > div {
+  padding: 12px 8px;
+  border-right: 2px solid #35556d;
+  text-align: center;
+  font-size: 18px;
+  background: linear-gradient(180deg, #0e1620, #0b1118);
+}
+
+.status-grid.header-row > div {
+  background: linear-gradient(180deg, #243241, #18222c);
+  font-weight: bold;
+  color: #f3fbff;
+}
+
+.status-grid > div.label-cell {
+  background: linear-gradient(180deg, #243241, #18222c);
+  font-weight: bold;
+}
+
+.status-grid input {
+  font-size: 18px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* カスタムクラス選択 */
+.class-picker {
+  position: relative;
+  width: 100%;
+}
+
+.picker-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+  border: 1px solid #4b6c84;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #111b26, #0b131c);
+  color: #f2fbff;
+  font-size: 20px;
+  padding: 10px 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: none;
+}
+
+.picker-arrow {
+  color: #8adfff;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.picker-panel {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  width: 100%;
+  z-index: 50;
+  border: 1px solid #4b6c84;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #101720, #0b1118);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.picker-panel.open {
+  display: block;
+}
+
+.picker-search {
+  border: none;
+  border-bottom: 1px solid #35556d;
+  border-radius: 0;
+  margin: 0;
+  font-size: 16px;
+}
+
+.picker-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.picker-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(138, 223, 255, 0.08);
+  font-size: 18px;
+  color: #f2fbff;
+  background: transparent;
+  text-align: left;
+}
+
+.picker-item:hover {
+  background: rgba(138, 223, 255, 0.12);
+}
+
+.picker-item.empty {
+  color: #8fa8b8;
+}
+
+.picker-item.hidden {
+  display: none;
+}
+
+.footer-buttons {
+  display: flex;
+  gap: 12px;
+  padding: 18px;
+  background: linear-gradient(180deg, #101720, #0b1118);
+}
+
+button {
+  padding: 12px 22px;
+  font-size: 16px;
+  border: 1px solid #4b6c84;
+  background: linear-gradient(180deg, #16222f, #0e161f);
+  color: #effaff;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+button:hover {
+  border-color: #8adfff;
+  background: linear-gradient(180deg, #192938, #101b26);
+}
+
+button.delete-btn {
+  border-color: #7a3f4a;
+  background: linear-gradient(180deg, #341a20, #221115);
+  color: #ffe8ec;
+}
+
+@media (max-width: 900px) {
+  .row,
+  .row.multi-2,
+  .row.multi-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .label,
+  .sub-label {
+    min-height: 50px;
+    font-size: 18px;
+    border-right: none;
+    border-left: none;
+    border-bottom: 2px solid #35556d;
+    padding: 6px 10px;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-grid > div {
+    border-right: none;
+    border-bottom: 1px solid #35556d;
+  }
+
+  .footer-buttons {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .pilot {
+    width: 120px;
+    height: 120px;
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .pilot-frame {
+    width: 128px;
+    height: 128px;
+    right: 6px;
+    bottom: 6px;
+  }
+
+  .pilot-label {
+    right: 10px;
+    bottom: 138px;
+  }
+}
+</style>
+</head>
+
+<body>
+<a class="back" href="index.html">← Unit Hangar</a>
+
+<div class="shell">
+  <div class="header">
+    <div class="header-sub">Machine Control / Pilot Profile Terminal</div>
+    <h1 class="header-title">Machine Profile Sheet</h1>
+  </div>
+
+  <div class="sheet">
+    <div class="top-visual">
+      <div class="visual-title">Visual Monitor</div>
+      <div id="preview" class="preview-frame"></div>
+    </div>
+
+    <div class="row">
+      <div class="label">プレイヤー</div>
+      <div class="cell"><input type="text" id="creator"></div>
+    </div>
+
+    <div class="row">
+      <div class="label">名前</div>
+      <div class="cell"><input type="text" id="pilotName"></div>
+    </div>
+
+    <div class="row">
+      <div class="label">カナ</div>
+      <div class="cell"><input type="text" id="pilotKana"></div>
+    </div>
+
+    <div class="row multi-3">
+      <div class="label">性別</div>
+      <div class="cell"><input class="small-input" type="text" id="gender"></div>
+      <div class="sub-label">年齢</div>
+      <div class="cell"><input class="small-input" type="text" id="age"></div>
+      <div class="sub-label">瞳の色</div>
+      <div class="cell"><input class="small-input" type="text" id="eyeColor"></div>
+    </div>
+
+    <div class="row multi-3">
+      <div class="label">身長</div>
+      <div class="cell"><input class="small-input" type="text" id="height"></div>
+      <div class="sub-label">体重</div>
+      <div class="cell"><input class="small-input" type="text" id="weight"></div>
+      <div class="sub-label">髪の色</div>
+      <div class="cell"><input class="small-input" type="text" id="hairColor"></div>
+    </div>
+
+    <div class="row multi-2">
+      <div class="label">カバー</div>
+      <div class="cell"><input type="text" id="cover"></div>
+      <div class="sub-label">肌の色</div>
+      <div class="cell"><input class="small-input" type="text" id="skinColor"></div>
+    </div>
+
+    <div class="row multi-2">
+      <div class="label">機体名</div>
+      <div class="cell"><input type="text" id="mechaName"></div>
+      <div class="sub-label">サイズ</div>
+      <div class="cell"><input class="small-input" type="text" id="size"></div>
+    </div>
+
+    <div class="row multi-2">
+      <div class="label">使用経験点</div>
+      <div class="cell"><div class="number-box" id="expDisplay">0</div></div>
+      <div class="sub-label">レベル</div>
+      <div class="cell"><div class="number-box" id="levelDisplay">3</div></div>
+    </div>
+
+    <div class="row">
+      <div class="label">プロフィール</div>
+      <div class="cell stretch"><textarea id="pilotProfile"></textarea></div>
+    </div>
+
+    <div class="row">
+      <div class="label">機体画像URL</div>
+      <div class="cell"><input type="text" id="mechaImageUrl"></div>
+    </div>
+
+    <div class="row">
+      <div class="label">パイロット画像URL</div>
+      <div class="cell"><input type="text" id="pilotImageUrl"></div>
+    </div>
+
+    <div class="status-block">
+      <div class="status-header">Status Control</div>
+
+      <div class="status-grid header-row">
+        <div>初期クラス</div>
+        <div>種別</div>
+        <div>体力</div>
+        <div>反射</div>
+        <div>知覚</div>
+        <div>理知</div>
+        <div>意志</div>
+        <div>幸運</div>
+      </div>
+
+      <div class="status-grid">
+        <div>
+          <select id="class1" style="display:none;"></select>
+          <div class="class-picker" id="picker1">
+            <button type="button" class="picker-button" onclick="toggleClassPicker(1)">
+              <span id="class1_display">未選択</span>
+              <span class="picker-arrow">▼</span>
+            </button>
+            <div class="picker-panel" id="class1_panel">
+              <input type="text" class="picker-search" id="class1_search" placeholder="絞り込み" oninput="filterClassOptions(1)">
+              <div class="picker-list" id="class1_list"></div>
+            </div>
+          </div>
+        </div>
+        <div><input type="text" id="type1"></div>
+        <div><div id="class1_hp">0</div></div>
+        <div><div id="class1_reflex">0</div></div>
+        <div><div id="class1_sense">0</div></div>
+        <div><div id="class1_intel">0</div></div>
+        <div><div id="class1_will">0</div></div>
+        <div><div id="class1_luck">0</div></div>
+      </div>
+
+      <div class="status-grid">
+        <div>
+          <select id="class2" style="display:none;"></select>
+          <div class="class-picker" id="picker2">
+            <button type="button" class="picker-button" onclick="toggleClassPicker(2)">
+              <span id="class2_display">未選択</span>
+              <span class="picker-arrow">▼</span>
+            </button>
+            <div class="picker-panel" id="class2_panel">
+              <input type="text" class="picker-search" id="class2_search" placeholder="絞り込み" oninput="filterClassOptions(2)">
+              <div class="picker-list" id="class2_list"></div>
+            </div>
+          </div>
+        </div>
+        <div><input type="text" id="type2"></div>
+        <div><div id="class2_hp">0</div></div>
+        <div><div id="class2_reflex">0</div></div>
+        <div><div id="class2_sense">0</div></div>
+        <div><div id="class2_intel">0</div></div>
+        <div><div id="class2_will">0</div></div>
+        <div><div id="class2_luck">0</div></div>
+      </div>
+
+      <div class="status-grid">
+        <div>
+          <select id="class3" style="display:none;"></select>
+          <div class="class-picker" id="picker3">
+            <button type="button" class="picker-button" onclick="toggleClassPicker(3)">
+              <span id="class3_display">未選択</span>
+              <span class="picker-arrow">▼</span>
+            </button>
+            <div class="picker-panel" id="class3_panel">
+              <input type="text" class="picker-search" id="class3_search" placeholder="絞り込み" oninput="filterClassOptions(3)">
+              <div class="picker-list" id="class3_list"></div>
+            </div>
+          </div>
+        </div>
+        <div><input type="text" id="type3"></div>
+        <div><div id="class3_hp">0</div></div>
+        <div><div id="class3_reflex">0</div></div>
+        <div><div id="class3_sense">0</div></div>
+        <div><div id="class3_intel">0</div></div>
+        <div><div id="class3_will">0</div></div>
+        <div><div id="class3_luck">0</div></div>
+      </div>
+
+      <div class="status-grid">
+        <div class="label-cell">合計</div>
+        <div class="label-cell">TOTAL</div>
+        <div id="total_hp">0</div>
+        <div id="total_reflex">0</div>
+        <div id="total_sense">0</div>
+        <div id="total_intel">0</div>
+        <div id="total_will">0</div>
+        <div id="total_luck">0</div>
+      </div>
+    </div>
+
+    <div class="footer-buttons">
+      <button onclick="save()">Save</button>
+      <button class="delete-btn" onclick="removeCharacter()">Delete</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
